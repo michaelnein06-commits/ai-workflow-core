@@ -43,6 +43,19 @@ gh issue close ISSUE_NUMBER --comment "Erledigt via PR #X"
 - Wenn CI rot ist: Status "blocked" + Beschreibung
 - Wenn Merge-Konflikte: Status "blocked" + Beschreibung
 
+## Agent-Learnings
+Wenn du etwas Neues lernst (Merge-Probleme, CI-Issues, Branch-Strategien), speichere es:
+```bash
+cat >> /root/share/workflow/learnings.md << 'EOF'
+
+### [Datum] — [Kurztitel]
+**Agent:** merge
+**Problem:** [Was war das Problem?]
+**Lösung:** [Wie wurde es gelöst?]
+**Learning:** [Was sollten wir in Zukunft anders machen?]
+EOF
+```
+
 ## Status-Befehle
 ```bash
 /home/micha/scripts/workflow-status.sh merge working "Beschreibung"

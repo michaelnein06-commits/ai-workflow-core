@@ -66,3 +66,38 @@ with open(f, 'w') as fh:
 echo "- **$TIMESTAMP** | \`$AGENT\` → **$STATUS**: $MESSAGE" >> "$LOG_FILE"
 
 echo "[$AGENT] Status: $STATUS — $MESSAGE"
+
+# Telegram-Benachrichtigung bei jedem Statuswechsel
+NOTIFY="/home/micha/scripts/notify-telegram.sh"
+if [ -f "$NOTIFY" ]; then
+    EMOJI=""
+    case "$STATUS" in
+        working) EMOJI="🔄" ;;
+        done)    EMOJI="✅" ;;
+        blocked) EMOJI="🚫" ;;
+        failed)  EMOJI="❌" ;;
+        idle)    EMOJI="💤" ;;
+    esac
+
+    # Agent-Namen lesbarer machen
+    DISPLAY_NAME="$AGENT"
+    case "$AGENT" in
+        orchestrator) DISPLAY_NAME="Orchestrator" ;;
+        dev1)         DISPLAY_NAME="Dev1" ;;
+        dev2)         DISPLAY_NAME="Dev2" ;;
+        qa)           DISPLAY_NAME="QA" ;;
+        merge)        DISPLAY_NAME="Merge" ;;
+    esac
+
+    TG_MSG="${EMOJI} <b>${DISPLAY_NAME}</b> → ${STATUS}
+${MESSAGE}"
+
+    # idle = kein Telegram, working = silent, rest = normal
+    if [ "$STATUS" != "idle" ]; then
+        if [ "$STATUS" = "working" ]; then
+            "$NOTIFY" "$TG_MSG" --silent 2>/dev/null &
+        else
+            "$NOTIFY" "$TG_MSG" 2>/dev/null &
+        fi
+    fi
+fi
