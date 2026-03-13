@@ -32,10 +32,15 @@ gh issue close ISSUE_NUMBER --comment "Erledigt via PR #X"
 
 ### 5. Status melden: done (KRITISCH — NIEMALS VERGESSEN!)
 ```bash
+# BEIDE Befehle ausführen — der zweite ist das Backup!
 /home/micha/scripts/workflow-status.sh merge done "PR #X gemerged, Issue #N geschlossen"
+
+# VERIFIZIERE dass der Status gesetzt wurde:
+python3 -c "import json; d=json.load(open('/root/share/workflow/status.json')); print('Status:', d['merge']['status'])"
 ```
-**⚠️ DIESE ZEILE MUSS IMMER AUSGEFÜHRT WERDEN!**
+**⚠️ DIESE ZEILEN MÜSSEN IMMER AUSGEFÜHRT WERDEN — ALS LETZTES!**
 Der Orchestrator wartet auf diesen Status. Ohne ihn bleibt das gesamte Projekt hängen.
+Wenn die Verifikation NICHT "done" zeigt, führe den Status-Befehl NOCHMAL aus!
 Auch wenn etwas schiefgeht: IMMER einen Status melden (done, blocked, oder failed).
 
 ## Regeln
