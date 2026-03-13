@@ -71,7 +71,23 @@ if [ ${#RESTARTED[@]} -gt 0 ]; then
 
     msg="Agents neugestartet: ${RESTARTED[*]}"
     echo "- **$(date -u '+%Y-%m-%dT%H:%M:%SZ')** | HEARTBEAT: $msg" >> "$LOG_FILE"
-    "$NOTIFY" "$msg" --silent 2>/dev/null || true
+
+    # Telegram NUR wenn 3x hintereinander neugestartet wurde (kein Spam)
+    RESTART_COUNT_FILE="/tmp/heartbeat-restart-count"
+    count=1
+    if [ -f "$RESTART_COUNT_FILE" ]; then
+        last_count=$(cat "$RESTART_COUNT_FILE" 2>/dev/null || echo 0)
+        last_age=$(( $(date +%s) - $(stat -c %Y "$RESTART_COUNT_FILE" 2>/dev/null || echo 0) ))
+        if [ "$last_age" -lt 600 ]; then
+            count=$((last_count + 1))
+        fi
+    fi
+    echo "$count" > "$RESTART_COUNT_FILE"
+
+    if [ "$count" -ge 3 ]; then
+        "$NOTIFY" "Agents crashen wiederholt: ${RESTARTED[*]} (${count}x in 10 Min)" --silent 2>/dev/null || true
+        echo 0 > "$RESTART_COUNT_FILE"
+    fi
 fi
 
 # Timeout-Probleme melden
