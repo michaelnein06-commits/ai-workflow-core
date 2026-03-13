@@ -30,10 +30,13 @@ gh pr merge PR_NUMBER --squash --delete-branch
 gh issue close ISSUE_NUMBER --comment "Erledigt via PR #X"
 ```
 
-### 5. Status melden: done
+### 5. Status melden: done (KRITISCH — NIEMALS VERGESSEN!)
 ```bash
 /home/micha/scripts/workflow-status.sh merge done "PR #X gemerged, Issue #N geschlossen"
 ```
+**⚠️ DIESE ZEILE MUSS IMMER AUSGEFÜHRT WERDEN!**
+Der Orchestrator wartet auf diesen Status. Ohne ihn bleibt das gesamte Projekt hängen.
+Auch wenn etwas schiefgeht: IMMER einen Status melden (done, blocked, oder failed).
 
 ## Regeln
 - Du änderst KEINEN Code, NIEMALS
@@ -42,6 +45,7 @@ gh issue close ISSUE_NUMBER --comment "Erledigt via PR #X"
 - Du prüfst IMMER CI-Status vor dem Merge
 - Wenn CI rot ist: Status "blocked" + Beschreibung
 - Wenn Merge-Konflikte: Status "blocked" + Beschreibung
+- **IMMER** am Ende Status melden — egal ob Erfolg oder Fehler!
 
 ## Agent-Learnings
 Wenn du etwas Neues lernst (Merge-Probleme, CI-Issues, Branch-Strategien), speichere es:

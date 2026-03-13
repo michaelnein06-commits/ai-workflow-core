@@ -5,6 +5,7 @@
 # Läuft als Cron alle 2 Minuten
 # Prüft: tmux Session vorhanden + Claude Prozess aktiv
 # Bei Timeout (>10 Min kein Status-Update): Alert
+# KEIN Alert wenn Orchestrator idle ist (Projekt fertig)
 # ============================================
 
 set -euo pipefail
@@ -22,6 +23,17 @@ AGENTS="orchestrator dev1 dev2 qa merge"
 PROBLEMS=()
 RESTARTED=()
 
+# Orchestrator-Status prüfen — wenn idle, ist das Projekt fertig
+ORCH_STATUS=$(python3 -c "
+import json
+try:
+    with open('$STATUS_FILE') as f:
+        data = json.load(f)
+    print(data.get('orchestrator', {}).get('status', 'unknown'))
+except:
+    print('unknown')
+" 2>/dev/null) || ORCH_STATUS="unknown"
+
 for name in $AGENTS; do
     # 1. tmux Session vorhanden?
     if ! tmux has-session -t "$name" 2>/dev/null; then
@@ -37,7 +49,12 @@ for name in $AGENTS; do
         continue
     fi
 
-    # 3. Timeout-Check: Agent "working" seit >10 Min ohne Update?
+    # 3. Timeout-Check: Agent "working" seit >15 Min ohne Update?
+    # ABER: Wenn Orchestrator idle ist, KEIN Timeout-Alert (Projekt ist fertig)
+    if [ "$ORCH_STATUS" = "idle" ] || [ "$ORCH_STATUS" = "done" ]; then
+        continue
+    fi
+
     last_update=$(python3 -c "
 import json, time
 try:
@@ -55,7 +72,7 @@ except:
     print(0)
 " 2>/dev/null) || last_update=0
 
-    if [ "$last_update" -gt 10 ]; then
+    if [ "$last_update" -gt 15 ]; then
         PROBLEMS+=("$name: working seit ${last_update} Min ohne Update")
     fi
 done
@@ -90,14 +107,14 @@ if [ ${#RESTARTED[@]} -gt 0 ]; then
     fi
 fi
 
-# Timeout-Probleme melden
+# Timeout-Probleme melden (nur wenn Orchestrator NICHT idle)
 if [ ${#PROBLEMS[@]} -gt 0 ]; then
     msg="Agent-Timeout: $(printf '%s, ' "${PROBLEMS[@]}")"
     echo "- **$(date -u '+%Y-%m-%dT%H:%M:%SZ')** | HEARTBEAT: $msg" >> "$LOG_FILE"
 
-    # Nur alle 10 Min benachrichtigen (nicht spammen)
+    # Nur alle 30 Min benachrichtigen (nicht spammen)
     ALERT_LOCK="/tmp/heartbeat-alert.lock"
-    if [ ! -f "$ALERT_LOCK" ] || [ "$(( $(date +%s) - $(stat -c %Y "$ALERT_LOCK" 2>/dev/null || echo 0) ))" -gt 600 ]; then
+    if [ ! -f "$ALERT_LOCK" ] || [ "$(( $(date +%s) - $(stat -c %Y "$ALERT_LOCK" 2>/dev/null || echo 0) ))" -gt 1800 ]; then
         "$NOTIFY" "$msg" --silent 2>/dev/null || true
         touch "$ALERT_LOCK"
     fi
