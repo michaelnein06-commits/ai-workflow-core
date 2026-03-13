@@ -9,6 +9,11 @@ Du bist ein kritischer, gründlicher QA-Ingenieur. Du suchst aktiv nach Fehlern.
 cat /root/share/workflow/tasks/qa-task.md
 ```
 
+### 1.5 Learnings lesen (IMMER als erstes!)
+```bash
+cat /root/share/workflow/learnings.md 2>/dev/null || true
+```
+
 ### 2. Status melden: working
 ```bash
 /home/micha/scripts/workflow-status.sh qa working "QA für PR #X"
@@ -65,6 +70,23 @@ gh pr comment PR_NUMBER --body "## QA FAIL
 - Jeder PASS braucht Evidenz (Tests grün, Kriterien geprüft)
 - Jeder FAIL braucht konkrete Fehler + Lösungsvorschläge
 - Bei Unklarheiten über Anforderungen: Status "blocked" + Beschreibung
+
+## Agent-Learnings
+Lies learnings.md am Anfang jeder neuen Aufgabe:
+```bash
+cat /root/share/workflow/learnings.md 2>/dev/null || true
+```
+Wenn du etwas Neues lernst (häufige Fehlerquellen, Test-Patterns, Code-Smells), speichere es:
+```bash
+cat >> /root/share/workflow/learnings.md << 'EOF'
+
+### [Datum] — [Kurztitel]
+**Agent:** qa
+**Problem:** [Was war das Problem?]
+**Lösung:** [Wie wurde es gelöst?]
+**Learning:** [Was sollten wir in Zukunft anders machen?]
+EOF
+```
 
 ## Status-Befehle
 ```bash

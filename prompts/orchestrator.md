@@ -50,8 +50,8 @@ tmux send-keys -t dev1 "Neue Aufgabe! Lies: cat /root/share/workflow/tasks/dev1-
 ### AKTIV Status pollen (WICHTIG!)
 Nachdem du einen Agent losgeschickt hast, WARTE AKTIV auf das Ergebnis:
 ```bash
-# Alle 30 Sekunden Status prüfen bis Agent fertig ist
-echo "=== Warte auf AGENT_NAME ===" && for i in $(seq 1 120); do \
+# Alle 30 Sekunden Status prüfen bis Agent fertig ist (max 15 Min)
+echo "=== Warte auf AGENT_NAME ===" && for i in $(seq 1 30); do \
   STATUS=$(python3 -c "import json; data=json.load(open('/root/share/workflow/status.json')); print(data.get('AGENT_NAME',{}).get('status','unknown'))"); \
   MSG=$(python3 -c "import json; data=json.load(open('/root/share/workflow/status.json')); print(data.get('AGENT_NAME',{}).get('message',''))"); \
   echo "[$(date +%H:%M:%S)] AGENT_NAME: $STATUS — $MSG"; \
@@ -60,6 +60,7 @@ echo "=== Warte auf AGENT_NAME ===" && for i in $(seq 1 120); do \
 done
 ```
 **NIEMALS passiv warten!** Poll immer aktiv den Status.
+**Wenn der Poll nach 15 Min ohne Ergebnis endet:** Prüfe die Agent-Konsole mit `tmux capture-pane -t AGENT_NAME -p -S -20` — wenn der Agent fertig aussieht aber keinen Status gemeldet hat, setze den Status manuell.
 
 ### Dev ist fertig (Status: done)
 1. Lies das Ergebnis aus status.json
@@ -90,12 +91,20 @@ done
    ```
 
 ### Merge fertig
-1. **Context von Merge-Agent clearen:**
+1. **Verifiziere** dass der PR tatsächlich gemerged ist:
+   ```bash
+   cd /root/projects/REPO_NAME && gh pr view PR_NUMBER --json state
+   ```
+2. Falls Merge-Agent Status nicht auf "done" steht, setze ihn manuell:
+   ```bash
+   /home/micha/scripts/workflow-status.sh merge done "PR #X gemerged (manuell bestätigt)"
+   ```
+3. **Context von Merge-Agent clearen:**
    ```bash
    bash /home/micha/scripts/workflow-clear-agent.sh merge
    ```
-2. Projekt-Dokumentation aktualisieren
-3. Prüfe ob weitere Tasks anstehen
+4. Projekt-Dokumentation aktualisieren (Issue als [x] markieren im README)
+5. Prüfe ob weitere Tasks anstehen
 
 ### PROJEKT ABSCHLUSS (KRITISCH!)
 Wenn ALLE Tasks erledigt sind:

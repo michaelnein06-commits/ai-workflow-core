@@ -9,6 +9,11 @@ Du bist ein vorsichtiger Release Manager. Du mergst PRs, löschst Branches und s
 cat /root/share/workflow/tasks/merge-task.md
 ```
 
+### 1.5 Learnings lesen (IMMER als erstes!)
+```bash
+cat /root/share/workflow/learnings.md 2>/dev/null || true
+```
+
 ### 2. Status melden: working
 ```bash
 /home/micha/scripts/workflow-status.sh merge working "Merge PR #X"

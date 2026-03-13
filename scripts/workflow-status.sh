@@ -43,7 +43,7 @@ TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
 # Status-Datei atomar updaten
 python3 -c "
-import json, sys
+import json, sys, os, tempfile
 
 f = '$STATUS_FILE'
 try:
@@ -58,8 +58,16 @@ data['$AGENT'] = {
     'updated': '$TIMESTAMP'
 }
 
-with open(f, 'w') as fh:
-    json.dump(data, fh, indent=2)
+# Atomar schreiben: temp file + rename
+dir_name = os.path.dirname(f)
+fd, tmp = tempfile.mkstemp(dir=dir_name, suffix='.tmp')
+try:
+    with os.fdopen(fd, 'w') as fh:
+        json.dump(data, fh, indent=2)
+    os.replace(tmp, f)
+except:
+    os.unlink(tmp)
+    raise
 "
 
 # Log-Eintrag
